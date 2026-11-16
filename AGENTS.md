@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+<!-- AGENT-MEMORY:BEGIN -->
+- Prototype state lives in `src/lib/transporte-store.ts` (localStorage via useSyncExternalStore) — demo only, no backend yet; swap for Lovable Cloud when going functional.
+- Pure boarding rules (divergences, tag matching, ETA) stay in `src/lib/transporte-logica.ts` with tests in `src/test/` — keeps them testable without UI.
+- NFC reading uses Web NFC (`src/lib/web-nfc.ts`), which only works in Chrome on Android in a top-level tab; always keep the manual check-in fallback.
+<!-- AGENT-MEMORY:END -->

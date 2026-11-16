@@ -64,7 +64,10 @@ export function MapaRota({ posOnibus, pontoDestacado, compacto = false }: { posO
             <circle r={final ? 11 : 7} className={destaque ? "fill-primary stroke-secondary" : "fill-card stroke-secondary"} strokeWidth="3" />
             {final && <School x={-6} y={-6} width={12} height={12} className="text-secondary" />}
             {!compacto && (
-              <text x={final ? -16 : 14} y={4} textAnchor={final ? "end" : "start"} className="fill-foreground text-[11px] font-semibold">
+              <text
+                x={final ? -16 : p.id === "p4" ? 0 : 14}
+                y={p.id === "p4" ? -14 : 4}
+                textAnchor={final ? "end" : p.id === "p4" ? "middle" : "start"} className="fill-foreground text-[11px] font-semibold">
                 {p.nome}
               </text>
             )}
