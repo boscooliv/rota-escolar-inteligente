@@ -25,9 +25,9 @@ export const Route = createFileRoute("/mapa")({
 function Mapa() {
   const s = useTransporte();
   const { pos, atualizadoEm } = useOnibusPosicao();
-  const meuPonto = PONTOS.find((p) => p.id === s.embarqueId) ?? PONTOS[0];
+  const meuPonto = PONTOS.find((p) => p.id === s.embarqueId) ?? PONTOS[0]!;
   const eta = minutosAtePonto(pos, meuPonto.posicao, ROTA.duracaoMin);
-  const proximo = PONTOS.find((p) => p.posicao > pos) ?? PONTOS[PONTOS.length - 1];
+  const proximo = PONTOS.find((p) => p.posicao > pos) ?? PONTOS[PONTOS.length - 1]!;
 
   return (
     <div>

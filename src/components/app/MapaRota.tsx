@@ -7,7 +7,7 @@ const CAMINHO: [number, number][] = [
 ];
 
 const segmentos = CAMINHO.slice(1).map((p, i) => {
-  const a = CAMINHO[i];
+  const a = CAMINHO[i]!;
   return Math.hypot(p[0] - a[0], p[1] - a[1]);
 });
 const TOTAL = segmentos.reduce((s, l) => s + l, 0);
@@ -15,15 +15,16 @@ const TOTAL = segmentos.reduce((s, l) => s + l, 0);
 export function pontoNoCaminho(t: number): [number, number] {
   let alvo = Math.min(Math.max(t, 0), 1) * TOTAL;
   for (let i = 0; i < segmentos.length; i++) {
-    if (alvo <= segmentos[i] || i === segmentos.length - 1) {
-      const f = segmentos[i] === 0 ? 0 : Math.min(alvo / segmentos[i], 1);
-      const [x1, y1] = CAMINHO[i];
-      const [x2, y2] = CAMINHO[i + 1];
+    const seg = segmentos[i]!;
+    if (alvo <= seg || i === segmentos.length - 1) {
+      const f = seg === 0 ? 0 : Math.min(alvo / seg, 1);
+      const [x1, y1] = CAMINHO[i]!;
+      const [x2, y2] = CAMINHO[i + 1]!;
       return [x1 + (x2 - x1) * f, y1 + (y2 - y1) * f];
     }
-    alvo -= segmentos[i];
+    alvo -= seg;
   }
-  return CAMINHO[CAMINHO.length - 1];
+  return CAMINHO[CAMINHO.length - 1]!;
 }
 
 const linha = CAMINHO.map(([x, y]) => `${x},${y}`).join(" ");

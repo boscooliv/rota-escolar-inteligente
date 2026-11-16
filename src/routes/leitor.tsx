@@ -255,7 +255,7 @@ function ListaPassageiros({
 }
 
 function CartaoResultado({ resultado, trecho, onFechar }: { resultado: Resultado; trecho: Trecho; onFechar: () => void }) {
-  const [vincularA, setVincularA] = useState(ALUNOS[0].id);
+  const [vincularA, setVincularA] = useState(ALUNOS[0]?.id ?? "");
 
   if (resultado.tipo === "desconhecida") {
     return (

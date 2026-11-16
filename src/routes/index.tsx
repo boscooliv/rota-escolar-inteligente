@@ -25,8 +25,8 @@ const hora = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: 
 function Inicio() {
   const s = useTransporte();
   const { pos } = useOnibusPosicao();
-  const aluno = alunosComTags(s).find((a) => a.id === ALUNO_ATUAL_ID) ?? ALUNOS[0];
-  const ponto = PONTOS.find((p) => p.id === s.embarqueId) ?? PONTOS[0];
+  const aluno = alunosComTags(s).find((a) => a.id === ALUNO_ATUAL_ID) ?? ALUNOS[0]!;
+  const ponto = PONTOS.find((p) => p.id === s.embarqueId) ?? PONTOS[0]!;
   const eta = minutosAtePonto(pos, ponto.posicao, ROTA.duracaoMin);
   const divergencia = s.avisos.find((a) => a.tipo === "divergencia" && !a.lido);
   const confirmou = s.confirmacao.ida || s.confirmacao.volta;
