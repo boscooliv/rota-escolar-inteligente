@@ -72,7 +72,7 @@ export function MapaRota({ posOnibus, pontoDestacado, compacto = false }: { posO
         );
       })}
 
-      <g transform={`translate(${bx} ${by})`} style={{ transition: "transform 1.8s linear" }}>
+      <g style={{ transform: `translate(${bx}px, ${by}px)`, transition: "transform 1.9s linear" }}>
         <circle r="22" className="fill-primary/30 animate-pulse" />
         <circle r="15" className="fill-primary stroke-secondary" strokeWidth="3" />
         <Bus x={-8} y={-8} width={16} height={16} className="text-secondary" />
