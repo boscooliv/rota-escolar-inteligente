@@ -104,6 +104,12 @@ export function useTransporte(): EstadoTransporte {
   );
 }
 
+/** Estado atual fora do React (ex.: dentro do callback de leitura NFC). */
+export function lerEstado(): EstadoTransporte {
+  carregar();
+  return estado;
+}
+
 const novoId = () => Math.random().toString(36).slice(2, 10);
 
 export function todasConfirmacoes(s: EstadoTransporte): Record<string, Confirmacao> {

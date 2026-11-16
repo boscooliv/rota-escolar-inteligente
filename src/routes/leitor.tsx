@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { ALUNOS, type Aluno, type Trecho } from "@/lib/transporte-dados";
 import { encontrarAlunoPorTag, jaEmbarcou, normalizarTag } from "@/lib/transporte-logica";
-import { acoes, alunosComTags, todasConfirmacoes, useTransporte } from "@/lib/transporte-store";
+import { acoes, alunosComTags, lerEstado, todasConfirmacoes, useTransporte } from "@/lib/transporte-store";
 import { iniciarLeituraNfc, verificarSuporteNfc, type SuporteNfc } from "@/lib/web-nfc";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +55,7 @@ function Leitor() {
 
   function processarSerial(serial: string) {
     const t = trechoRef.current;
-    const lista = alunosComTags(sAtual());
+    const lista = alunosComTags(lerEstado());
     const aluno = encontrarAlunoPorTag(lista, serial);
     if (!aluno) {
       setResultado({ tipo: "desconhecida", serial: normalizarTag(serial) });
@@ -67,7 +67,7 @@ function Leitor() {
     setResultado(
       r === "duplicado"
         ? { tipo: "duplicado", aluno }
-        : { tipo: "ok", aluno, confirmado: !!todasConfirmacoes(sAtual())[aluno.id]?.[t] },
+        : { tipo: "ok", aluno, confirmado: !!todasConfirmacoes(lerEstado())[aluno.id]?.[t] },
     );
   }
 
@@ -212,20 +212,10 @@ function Leitor() {
   );
 }
 
-// Lê o estado mais recente fora do render (usado no callback do NFC).
-let ultimoEstado: ReturnType<typeof useTransporte> | null = null;
-function sAtual() {
-  return ultimoEstado!;
-}
-function useRegistrarUltimo(s: ReturnType<typeof useTransporte>) {
-  ultimoEstado = s;
-}
-
 function ListaPassageiros({
   alunos, trecho, vazio, naoConfirmado = false,
 }: { alunos: Aluno[]; trecho: Trecho; vazio: string; naoConfirmado?: boolean }) {
   const s = useTransporte();
-  useRegistrarUltimo(s);
   if (alunos.length === 0) return vazio ? <p className="mt-2 text-sm text-muted-foreground">{vazio}</p> : null;
   return (
     <ul className="mt-2 divide-y divide-border">

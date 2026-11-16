@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AvisosRouteImport } from './routes/avisos'
 import { Route as ConfirmarRouteImport } from './routes/confirmar'
+import { Route as LeitorRouteImport } from './routes/leitor'
 import { Route as MapaRouteImport } from './routes/mapa'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const ConfirmarRoute = ConfirmarRouteImport.update({
   path: '/confirmar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LeitorRoute = LeitorRouteImport.update({
+  id: '/leitor',
+  path: '/leitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MapaRoute = MapaRouteImport.update({
   id: '/mapa',
   path: '/mapa',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/avisos': typeof AvisosRoute
   '/confirmar': typeof ConfirmarRoute
+  '/leitor': typeof LeitorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/avisos': typeof AvisosRoute
   '/confirmar': typeof ConfirmarRoute
+  '/leitor': typeof LeitorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/avisos': typeof AvisosRoute
   '/confirmar': typeof ConfirmarRoute
+  '/leitor': typeof LeitorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/avisos' | '/confirmar' | '/mapa'
+  fullPaths: '/' | '/avisos' | '/confirmar' | '/leitor' | '/mapa'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/avisos' | '/confirmar' | '/mapa'
-  id: '__root__' | '/' | '/avisos' | '/confirmar' | '/mapa'
+  to: '/' | '/avisos' | '/confirmar' | '/leitor' | '/mapa'
+  id: '__root__' | '/' | '/avisos' | '/confirmar' | '/leitor' | '/mapa'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AvisosRoute: typeof AvisosRoute
   ConfirmarRoute: typeof ConfirmarRoute
+  LeitorRoute: typeof LeitorRoute
   MapaRoute: typeof MapaRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfirmarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/leitor': {
+      id: '/leitor'
+      path: '/leitor'
+      fullPath: '/leitor'
+      preLoaderRoute: typeof LeitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mapa': {
       id: '/mapa'
       path: '/mapa'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AvisosRoute: AvisosRoute,
   ConfirmarRoute: ConfirmarRoute,
+  LeitorRoute: LeitorRoute,
   MapaRoute: MapaRoute,
 }
 export const routeTree = rootRouteImport
