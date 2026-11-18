@@ -1,5 +1,5 @@
 import { Bus, School } from "lucide-react";
-import { PONTOS } from "@/lib/transporte-dados";
+import { PONTOS, type Sentido } from "@/lib/transporte-dados";
 
 const CAMINHO: [number, number][] = [
   [40, 395], [72, 345], [58, 300], [108, 268], [165, 262], [196, 222],
@@ -29,14 +29,25 @@ export function pontoNoCaminho(t: number): [number, number] {
 
 const linha = CAMINHO.map(([x, y]) => `${x},${y}`).join(" ");
 
-export function MapaRota({ posOnibus, pontoDestacado, compacto = false }: { posOnibus: number; pontoDestacado?: string; compacto?: boolean }) {
+/** posOnibus é a posição no mapa (0 = Encanto, 1 = IFRN); na volta o ônibus anda de 1 para 0. */
+export function MapaRota({
+  posOnibus,
+  sentido = "ida",
+  pontoDestacado,
+  compacto = false,
+}: {
+  posOnibus: number;
+  sentido?: Sentido;
+  pontoDestacado?: string | undefined;
+  compacto?: boolean;
+}) {
   const [bx, by] = pontoNoCaminho(posOnibus);
-  const percorrido = [...CAMINHO.filter((_, i) => {
-    const acumulado = segmentos.slice(0, i).reduce((s, l) => s + l, 0);
-    return acumulado / TOTAL <= posOnibus;
-  }), [bx, by] as [number, number]]
-    .map(([x, y]) => `${x},${y}`)
-    .join(" ");
+  const frac = (i: number) => segmentos.slice(0, i).reduce((s, l) => s + l, 0) / TOTAL;
+  const pontosPercorridos: [number, number][] =
+    sentido === "ida"
+      ? [...CAMINHO.filter((_, i) => frac(i) <= posOnibus), [bx, by]]
+      : [[bx, by], ...CAMINHO.filter((_, i) => frac(i) >= posOnibus)];
+  const percorrido = pontosPercorridos.map(([x, y]) => `${x},${y}`).join(" ");
 
   return (
     <svg
@@ -66,10 +77,12 @@ export function MapaRota({ posOnibus, pontoDestacado, compacto = false }: { posO
             {final && <School x={-6} y={-6} width={12} height={12} className="text-secondary" />}
             {!compacto && (
               <text
-                x={final ? -16 : p.id === "p4" ? 0 : 14}
-                y={p.id === "p4" ? -14 : 4}
-                textAnchor={final ? "end" : p.id === "p4" ? "middle" : "start"} className="fill-foreground text-[11px] font-semibold">
-                {p.nome}
+                x={final ? -16 : p.posicao > 0.75 ? -12 : 13}
+                y={p.posicao > 0.75 && !final ? -8 : 4}
+                textAnchor={final || p.posicao > 0.75 ? "end" : "start"}
+                className="fill-foreground text-[11px] font-semibold"
+              >
+                {p.rotulo}
               </text>
             )}
           </g>

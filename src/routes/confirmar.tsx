@@ -1,19 +1,30 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { ArrowLeftRight, ArrowRight, ArrowLeft, Check, X } from "lucide-react";
-import { PageHeader } from "@/components/app/PageHeader";
-import { PONTOS, type Confirmacao } from "@/lib/transporte-dados";
-import { acoes, useTransporte } from "@/lib/transporte-store";
+import { ArrowLeft, ArrowLeftRight, ArrowRight, CheckCircle2 } from "lucide-react";
+import { AppHeader, Carregando } from "@/components/app/comum";
+import { useSessao } from "@/hooks/use-sessao";
+import { formatarData, PONTO_IFRN_ID, PONTOS, ROTULO_TRAJETO, rotuloDia, type Trajeto, type Viagem } from "@/lib/transporte-dados";
+import { validarConfirmacao, type ErrosConfirmacao } from "@/lib/transporte-logica";
+import { acoes, datasAbertas, descricaoViagem } from "@/lib/transporte-store";
 import { cn } from "@/lib/utils";
 
+type Busca = { data?: string | undefined; trajeto?: Trajeto | undefined };
+
 export const Route = createFileRoute("/confirmar")({
+  validateSearch: (s: Record<string, unknown>): Busca => {
+    const t = s["trajeto"];
+    return {
+      data: typeof s["data"] === "string" ? s["data"] : undefined,
+      trajeto: t === "ida" || t === "volta" || t === "ambos" ? t : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Confirmar viagem · Transporte Escolar NFC" },
-      { name: "description", content: "Informe se vai usar o transporte na ida, na volta ou nos dois trajetos e escolha seus pontos." },
+      { name: "description", content: "Cadastre a confirmação da sua viagem: data, trajeto e pontos de embarque e desembarque." },
       { property: "og:title", content: "Confirmar viagem · Transporte Escolar NFC" },
-      { property: "og:description", content: "Informe se vai usar o transporte e escolha os pontos de embarque e desembarque." },
+      { property: "og:description", content: "Informe se vai ao IFRN, se volta para a cidade ou os dois, e escolha seus pontos." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -21,127 +32,155 @@ export const Route = createFileRoute("/confirmar")({
   component: ConfirmarViagem,
 });
 
-const OPCOES: { id: string; label: string; desc: string; conf: Confirmacao; icon: typeof ArrowRight }[] = [
-  { id: "ambos", label: "Ida e volta", desc: "Vou e volto de ônibus", conf: { ida: true, volta: true }, icon: ArrowLeftRight },
-  { id: "ida", label: "Só ida", desc: "Para o IFRN", conf: { ida: true, volta: false }, icon: ArrowRight },
-  { id: "volta", label: "Só volta", desc: "Para minha cidade", conf: { ida: false, volta: true }, icon: ArrowLeft },
-  { id: "nao", label: "Não vou hoje", desc: "Libero minha vaga", conf: { ida: false, volta: false }, icon: X },
+const TRAJETOS: { id: Trajeto; icon: typeof ArrowRight }[] = [
+  { id: "ida", icon: ArrowRight },
+  { id: "volta", icon: ArrowLeft },
+  { id: "ambos", icon: ArrowLeftRight },
 ];
-
-const idDe = (c: Confirmacao) => OPCOES.find((o) => o.conf.ida === c.ida && o.conf.volta === c.volta)?.id ?? "ambos";
+const selectCls =
+  "mt-1 w-full rounded-xl border border-input bg-card px-3 py-3 text-base outline-none focus:ring-2 focus:ring-ring aria-[invalid=true]:border-destructive";
 
 function ConfirmarViagem() {
-  const s = useTransporte();
-  const navigate = useNavigate();
-  const [opcao, setOpcao] = useState("ambos");
-  const [embarque, setEmbarque] = useState("p3");
-  const [desembarque, setDesembarque] = useState("p3");
+  const busca = Route.useSearch();
+  const { s, usuario, aluno } = useSessao();
+  const [data, setData] = useState(busca.data ?? "");
+  const [trajeto, setTrajeto] = useState<Trajeto | "">(busca.trajeto ?? "");
+  const [embarqueId, setEmbarqueId] = useState("");
+  const [desembarqueId, setDesembarqueId] = useState("");
+  const [erros, setErros] = useState<ErrosConfirmacao>({});
+  const [sucesso, setSucesso] = useState<Viagem[] | null>(null);
 
-  useEffect(() => {
-    if (s.confirmadoEm) setOpcao(idDe(s.confirmacao));
-    setEmbarque(s.embarqueId);
-    setDesembarque(s.desembarqueId);
-  }, [s.confirmadoEm, s.confirmacao, s.embarqueId, s.desembarqueId]);
+  if (!usuario) return <Carregando />;
+  if (!aluno)
+    return (
+      <div className="px-5 pt-10 text-center">
+        <p className="font-bold">Somente alunos confirmam viagens.</p>
+        <Link to="/viagens" className="mt-3 inline-block font-semibold underline">Ver viagens</Link>
+      </div>
+    );
 
-  const conf = OPCOES.find((o) => o.id === opcao)!.conf;
-  const pontosSemCampus = PONTOS.filter((p) => p.posicao < 1);
+  const datas = datasAbertas(s);
 
-  function salvar() {
-    acoes.confirmar(conf, embarque, desembarque);
-    toast.success(conf.ida || conf.volta ? "Viagem confirmada!" : "Tudo certo, sua vaga foi liberada.");
-    navigate({ to: "/" });
+  function escolherTrajeto(t: Trajeto) {
+    setTrajeto(t);
+    // Sugere os pontos padrão do aluno conforme o trajeto escolhido.
+    if (t === "volta") {
+      setEmbarqueId((e) => e || PONTO_IFRN_ID);
+      setDesembarqueId((d) => d || aluno!.pontoPadraoId);
+    } else {
+      setEmbarqueId((e) => e || aluno!.pontoPadraoId);
+      setDesembarqueId((d) => d || PONTO_IFRN_ID);
+    }
   }
+
+  function enviar(e: FormEvent) {
+    e.preventDefault();
+    const v = validarConfirmacao({ data, trajeto, embarqueId, desembarqueId }, datas);
+    setErros(v);
+    if (Object.keys(v).length || !trajeto) return;
+    const viagens = acoes.confirmarViagens(aluno!.id, data, trajeto, embarqueId, desembarqueId);
+    if (!viagens.length) return setErros({ trajeto: "Não há viagem aberta nesse trajeto para a data escolhida." });
+    setSucesso(viagens);
+    toast.success("Viagem confirmada!");
+  }
+
+  if (sucesso)
+    return (
+      <div>
+        <AppHeader titulo="Viagem confirmada" usuario={usuario} />
+        <div className="card-surface mx-5 p-6 text-center">
+          <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-success/15">
+            <CheckCircle2 className="size-9 text-success" />
+          </span>
+          <p className="mt-4 text-lg font-extrabold">Tudo certo, {usuario.nome.split(" ")[0]}!</p>
+          <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+            {sucesso.map((v) => (
+              <li key={v.id}>{descricaoViagem(v)}</li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm">Lembre de aproximar sua tag NFC do leitor ao entrar no ônibus.</p>
+          <div className="mt-5 grid gap-2">
+            <Link to="/viagens/$id" params={{ id: sucesso[0]!.id }} className="rounded-2xl bg-primary py-3 font-bold text-primary-foreground shadow-pop">
+              Ver viagem
+            </Link>
+            <button type="button" onClick={() => setSucesso(null)} className="py-2 text-sm font-semibold text-muted-foreground underline">
+              Nova confirmação
+            </button>
+          </div>
+        </div>
+      </div>
+    );
 
   return (
     <div>
-      <PageHeader subtitulo="Viagem de hoje" titulo="Vai usar o transporte?" />
+      <AppHeader titulo="Confirmar viagem" usuario={usuario} />
+      <form onSubmit={enviar} noValidate className="card-surface mx-5 space-y-5 p-5">
+        <label className="block">
+          <span className="text-sm font-semibold">Viagem (data) *</span>
+          <select aria-label="Data da viagem" value={data} onChange={(e) => setData(e.target.value)} aria-invalid={!!erros.data} className={selectCls}>
+            <option value="">Selecione a data</option>
+            {datas.map((d) => (
+              <option key={d} value={d}>
+                {rotuloDia(d)} · {formatarData(d, { weekday: "long", day: "2-digit", month: "2-digit" })}
+              </option>
+            ))}
+          </select>
+          {erros.data && <span className="mt-1 block text-sm text-destructive">{erros.data}</span>}
+        </label>
 
-      <div className="grid grid-cols-2 gap-3 px-5">
-        {OPCOES.map(({ id, label, desc, icon: Icon }) => {
-          const ativo = opcao === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setOpcao(id)}
-              aria-pressed={ativo}
-              className={cn(
-                "relative flex flex-col items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all",
-                ativo ? "border-secondary bg-primary text-primary-foreground shadow-pop" : "border-border bg-card",
-              )}
-            >
-              <Icon className="size-6" />
-              <div>
-                <p className="font-display font-extrabold">{label}</p>
-                <p className={cn("text-xs", ativo ? "text-primary-foreground/75" : "text-muted-foreground")}>{desc}</p>
-              </div>
-              {ativo && <Check className="absolute right-3 top-3 size-5" />}
-            </button>
-          );
-        })}
-      </div>
+        <fieldset>
+          <legend className="text-sm font-semibold">Trajeto *</legend>
+          <div className="mt-1 grid grid-cols-3 gap-2">
+            {TRAJETOS.map(({ id, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={trajeto === id}
+                onClick={() => escolherTrajeto(id)}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-3 text-center text-xs font-bold transition-colors",
+                  trajeto === id ? "border-secondary bg-primary text-primary-foreground" : "border-border bg-card text-foreground",
+                  erros.trajeto && !trajeto && "border-destructive",
+                )}
+              >
+                <Icon className="size-5" />
+                {ROTULO_TRAJETO[id]}
+              </button>
+            ))}
+          </div>
+          {erros.trajeto && <span className="mt-1 block text-sm text-destructive">{erros.trajeto}</span>}
+        </fieldset>
 
-      {conf.ida && (
-        <EscolhaPonto titulo="Onde você embarca na ida?" valor={embarque} onChange={setEmbarque} pontos={pontosSemCampus} campo="horarioIda" />
-      )}
-      {conf.volta && (
-        <EscolhaPonto titulo="Onde você desce na volta?" valor={desembarque} onChange={setDesembarque} pontos={pontosSemCampus} campo="horarioVolta" />
-      )}
+        <label className="block">
+          <span className="text-sm font-semibold">Ponto de embarque *</span>
+          <select aria-label="Ponto de embarque" value={embarqueId} onChange={(e) => setEmbarqueId(e.target.value)} aria-invalid={!!erros.embarqueId} className={selectCls}>
+            <option value="">Selecione o ponto</option>
+            {PONTOS.map((p) => (
+              <option key={p.id} value={p.id}>{p.nome} – {p.cidade}</option>
+            ))}
+          </select>
+          {erros.embarqueId && <span className="mt-1 block text-sm text-destructive">{erros.embarqueId}</span>}
+        </label>
 
-      <div className="px-5 pt-6">
-        <button
-          type="button"
-          onClick={salvar}
-          className="w-full rounded-2xl bg-secondary py-4 font-display text-lg font-extrabold text-secondary-foreground"
-        >
-          {conf.ida || conf.volta ? "Confirmar viagem" : "Informar ausência"}
+        <label className="block">
+          <span className="text-sm font-semibold">Ponto de desembarque *</span>
+          <select aria-label="Ponto de desembarque" value={desembarqueId} onChange={(e) => setDesembarqueId(e.target.value)} aria-invalid={!!erros.desembarqueId} className={selectCls}>
+            <option value="">Selecione o ponto</option>
+            {PONTOS.map((p) => (
+              <option key={p.id} value={p.id}>{p.nome} – {p.cidade}</option>
+            ))}
+          </select>
+          {erros.desembarqueId && <span className="mt-1 block text-sm text-destructive">{erros.desembarqueId}</span>}
+        </label>
+
+        {trajeto === "ambos" && <p className="rounded-xl bg-accent p-3 text-xs text-accent-foreground">Na volta, o trajeto se inverte: você embarca no ponto de desembarque da ida.</p>}
+
+        <button type="submit" className="w-full rounded-2xl bg-primary py-3.5 font-bold text-primary-foreground shadow-pop">
+          Confirmar
         </button>
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          O motorista vê sua confirmação e compara com o embarque registrado pela tag NFC.
-        </p>
-      </div>
+        <p className="text-center text-xs text-muted-foreground">* Campos obrigatórios</p>
+      </form>
     </div>
-  );
-}
-
-function EscolhaPonto({
-  titulo, valor, onChange, pontos, campo,
-}: {
-  titulo: string;
-  valor: string;
-  onChange: (id: string) => void;
-  pontos: typeof PONTOS;
-  campo: "horarioIda" | "horarioVolta";
-}) {
-  return (
-    <section className="px-5 pt-6">
-      <h2 className="mb-3 text-lg font-extrabold">{titulo}</h2>
-      <div className="card-surface overflow-hidden">
-        {pontos.map((p, i) => {
-          const ativo = valor === p.id;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => onChange(p.id)}
-              className={cn(
-                "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
-                i > 0 && "border-t border-border",
-                ativo && "bg-accent",
-              )}
-            >
-              <span className={cn("flex size-5 items-center justify-center rounded-full border-2", ativo ? "border-secondary bg-secondary" : "border-border")}>
-                {ativo && <span className="size-2 rounded-full bg-primary" />}
-              </span>
-              <span className="flex-1">
-                <span className="block font-semibold">{p.nome}</span>
-                <span className="block text-xs text-muted-foreground">{p.referencia}</span>
-              </span>
-              <span className="font-mono text-sm font-semibold">{p[campo]}</span>
-            </button>
-          );
-        })}
-      </div>
-    </section>
   );
 }
