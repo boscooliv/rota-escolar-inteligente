@@ -3,6 +3,7 @@
 - [ ] Refazer protótipo pelo prompt do grupo: login, listagem, detalhe, cadastro/confirmação, notificações
 - [ ] Dados fictícios seguindo o modelo (Usuario, Aluno, Responsavel, TagNFC, Onibus, PontoParada, Viagem, Confirmacao, Embarque, Localizacao, Notificacao)
 - [ ] Testes das regras (situação do passageiro, validação do formulário, tags)
+- [x] Página Embarque do responsável (tag NFC, contadores, faltando, divergência)
 - [ ] Prints das telas em docs/prints
 - [ ] Diagrama do banco (docs/modelagem-banco.md + imagem)
 - [ ] README: integrantes, trilha, problema, protótipo, modelagem, como usamos IA

@@ -37,7 +37,7 @@ export type Estado = {
   notificacoes: Notificacao[];
 };
 
-const CHAVE = "transporte-nfc-demo-v2";
+const CHAVE = "transporte-nfc-demo-v3";
 
 function semente(usuarioId: string | null = null): Estado {
   const viagens = gerarViagens();
@@ -177,12 +177,15 @@ export const acoes = {
     }));
   },
 
-  registrarEmbarque(viagemId: string, alunoId: string, metodo: MetodoEmbarque): "ok" | "duplicado" {
+  registrarEmbarque(viagemId: string, alunoId: string, metodo: MetodoEmbarque, divergencia = false): "ok" | "duplicado" {
     carregar();
     if (embarqueDe(estado, viagemId, alunoId)) return "duplicado";
     atualizar((s) => {
       const tag = TAGS.find((t) => t.alunoId === alunoId);
-      const e: Embarque = { id: novoId(), viagemId, alunoId, metodo, tagId: metodo === "nfc" ? tag?.id ?? null : null, horario: agora() };
+      const e: Embarque = {
+        id: novoId(), viagemId, alunoId, metodo, tagId: metodo === "nfc" ? tag?.id ?? null : null, horario: agora(),
+        ...(divergencia ? { divergencia: true } : {}),
+      };
       const v = viagemPorId(s, viagemId)!;
       const n = notificar(usuarioDoAluno(alunoId), {
         viagemId,

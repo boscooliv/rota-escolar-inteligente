@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Bell, CalendarPlus, List, LogOut } from "lucide-react";
+import { Bell, CalendarPlus, List, LogOut, Nfc } from "lucide-react";
 import { useSessao } from "@/hooks/use-sessao";
 import { acoes } from "@/lib/transporte-store";
 
@@ -17,7 +17,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur">
-      <ul className={`mx-auto grid max-w-md px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 ${aluno ? "grid-cols-4" : "grid-cols-3"}`}>
+      <ul className={`mx-auto grid max-w-md px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 ${aluno ? "grid-cols-4" : "grid-cols-4"}`}>
         <li>
           <Link to="/viagens" className={classe}>
             <span className={pilula}><List className="size-5" /></span>
@@ -29,6 +29,14 @@ export function BottomNav() {
             <Link to="/confirmar" className={classe}>
               <span className={pilula}><CalendarPlus className="size-5" /></span>
               Confirmar
+            </Link>
+          </li>
+        )}
+        {!aluno && (
+          <li>
+            <Link to="/embarque" className={classe}>
+              <span className={pilula}><Nfc className="size-5" /></span>
+              Embarque
             </Link>
           </li>
         )}

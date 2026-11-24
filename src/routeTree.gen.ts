@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfirmarRouteImport } from './routes/confirmar'
+import { Route as EmbarqueRouteImport } from './routes/embarque'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as ViagensIndexRouteImport } from './routes/viagens.index'
 import { Route as ViagensIdRouteImport } from './routes/viagens.$id'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const ConfirmarRoute = ConfirmarRouteImport.update({
   id: '/confirmar',
   path: '/confirmar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbarqueRoute = EmbarqueRouteImport.update({
+  id: '/embarque',
+  path: '/embarque',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificacoesRoute = NotificacoesRouteImport.update({
@@ -44,6 +50,7 @@ const ViagensIdRoute = ViagensIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/confirmar': typeof ConfirmarRoute
+  '/embarque': typeof EmbarqueRoute
   '/notificacoes': typeof NotificacoesRoute
   '/viagens/$id': typeof ViagensIdRoute
   '/viagens/': typeof ViagensIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/confirmar': typeof ConfirmarRoute
+  '/embarque': typeof EmbarqueRoute
   '/notificacoes': typeof NotificacoesRoute
   '/viagens/$id': typeof ViagensIdRoute
   '/viagens': typeof ViagensIndexRoute
@@ -59,19 +67,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/confirmar': typeof ConfirmarRoute
+  '/embarque': typeof EmbarqueRoute
   '/notificacoes': typeof NotificacoesRoute
   '/viagens/$id': typeof ViagensIdRoute
   '/viagens/': typeof ViagensIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/confirmar' | '/notificacoes' | '/viagens/$id' | '/viagens/'
+  fullPaths:
+    | '/'
+    | '/confirmar'
+    | '/embarque'
+    | '/notificacoes'
+    | '/viagens/$id'
+    | '/viagens/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/confirmar' | '/notificacoes' | '/viagens/$id' | '/viagens'
+  to:
+    | '/'
+    | '/confirmar'
+    | '/embarque'
+    | '/notificacoes'
+    | '/viagens/$id'
+    | '/viagens'
   id:
     | '__root__'
     | '/'
     | '/confirmar'
+    | '/embarque'
     | '/notificacoes'
     | '/viagens/$id'
     | '/viagens/'
@@ -80,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfirmarRoute: typeof ConfirmarRoute
+  EmbarqueRoute: typeof EmbarqueRoute
   NotificacoesRoute: typeof NotificacoesRoute
   ViagensIdRoute: typeof ViagensIdRoute
   ViagensIndexRoute: typeof ViagensIndexRoute
@@ -99,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/confirmar'
       fullPath: '/confirmar'
       preLoaderRoute: typeof ConfirmarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embarque': {
+      id: '/embarque'
+      path: '/embarque'
+      fullPath: '/embarque'
+      preLoaderRoute: typeof EmbarqueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notificacoes': {
@@ -128,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfirmarRoute: ConfirmarRoute,
+  EmbarqueRoute: EmbarqueRoute,
   NotificacoesRoute: NotificacoesRoute,
   ViagensIdRoute: ViagensIdRoute,
   ViagensIndexRoute: ViagensIndexRoute,

@@ -78,3 +78,38 @@ export function validarLogin(email: string, senha: string): { email?: string; se
   else if (senha.length < 4) erros.senha = "A senha precisa ter pelo menos 4 caracteres.";
   return erros;
 }
+
+export type ResultadoLeitura =
+  | { tipo: "nao_encontrada" }
+  | { tipo: "bloqueada"; alunoId: string }
+  | { tipo: "ja_embarcou"; alunoId: string }
+  | { tipo: "sem_confirmacao"; alunoId: string; tagId: string }
+  | { tipo: "ok"; alunoId: string; tagId: string };
+
+/** Avalia o código lido/digitado na tela de Embarque, antes de registrar. */
+export function avaliarLeitura(
+  tags: TagNFC[],
+  confirmacoes: Confirmacao[],
+  embarques: Embarque[],
+  viagemId: string,
+  codigo: string,
+): ResultadoLeitura {
+  const alvo = normalizarTag(codigo);
+  const tag = alvo ? tags.find((t) => normalizarTag(t.codigo) === alvo) : undefined;
+  if (!tag) return { tipo: "nao_encontrada" };
+  if (!tag.ativa) return { tipo: "bloqueada", alunoId: tag.alunoId };
+  if (embarques.some((e) => e.viagemId === viagemId && e.alunoId === tag.alunoId)) return { tipo: "ja_embarcou", alunoId: tag.alunoId };
+  if (!confirmacoes.some((c) => c.viagemId === viagemId && c.alunoId === tag.alunoId))
+    return { tipo: "sem_confirmacao", alunoId: tag.alunoId, tagId: tag.id };
+  return { tipo: "ok", alunoId: tag.alunoId, tagId: tag.id };
+}
+
+/** Viagem do dia mais próxima do horário atual. */
+export function viagemMaisProxima<T extends { horarioSaida: string }>(viagens: T[], agora: Date): T | undefined {
+  const min = agora.getHours() * 60 + agora.getMinutes();
+  const dist = (v: T) => {
+    const [h, m] = v.horarioSaida.split(":").map(Number);
+    return Math.abs(h! * 60 + m! - min);
+  };
+  return [...viagens].sort((a, b) => dist(a) - dist(b))[0];
+}

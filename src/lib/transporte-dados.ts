@@ -39,7 +39,16 @@ export type Confirmacao = {
   pontoDesembarqueId: string;
   criadaEm: string;
 };
-export type Embarque = { id: string; viagemId: string; alunoId: string; tagId: string | null; metodo: MetodoEmbarque; horario: string };
+export type Embarque = {
+  id: string;
+  viagemId: string;
+  alunoId: string;
+  tagId: string | null;
+  metodo: MetodoEmbarque;
+  horario: string;
+  /** Embarcou sem ter confirmado a viagem. */
+  divergencia?: boolean;
+};
 export type Localizacao = { id: string; viagemId: string; latitude: number; longitude: number; registradaEm: string };
 export type Notificacao = {
   id: string;
@@ -66,6 +75,11 @@ export const USUARIOS: Usuario[] = [
   { id: "u8", nome: "Kauã Batista Nascimento", email: "kaua.nascimento@escolar.ifrn.edu.br", perfil: "aluno" },
   { id: "u9", nome: "Letícia Araújo Pinto", email: "leticia.araujo@escolar.ifrn.edu.br", perfil: "aluno" },
   { id: "u10", nome: "Rafael Queiroz Melo", email: "rafael.queiroz@escolar.ifrn.edu.br", perfil: "aluno" },
+  { id: "u13", nome: "Clara Fernandes Lima", email: "clara.lima@escolar.ifrn.edu.br", perfil: "aluno" },
+  { id: "u14", nome: "Davi Rodrigues Paiva", email: "davi.paiva@escolar.ifrn.edu.br", perfil: "aluno" },
+  { id: "u15", nome: "Isabela Freitas Dantas", email: "isabela.dantas@escolar.ifrn.edu.br", perfil: "aluno" },
+  { id: "u16", nome: "Lucas Emanuel Silva", email: "lucas.silva@escolar.ifrn.edu.br", perfil: "aluno" },
+  { id: "u17", nome: "Sofia Holanda Reis", email: "sofia.reis@escolar.ifrn.edu.br", perfil: "aluno" },
   { id: "u11", nome: "Francisco Diógenes", email: "francisco.diogenes@transporte.rn.gov.br", perfil: "responsavel" },
   { id: "u12", nome: "Antônia Maria Rêgo", email: "antonia.rego@transporte.rn.gov.br", perfil: "responsavel" },
 ];
@@ -91,6 +105,11 @@ export const ALUNOS: Aluno[] = [
   { id: "a8", usuarioId: "u8", matricula: "20251094013", curso: "Apicultura – 1º ano", cidade: "Alexandria", pontoPadraoId: "p3" },
   { id: "a9", usuarioId: "u9", matricula: "20231094028", curso: "Edificações – 3º ano", cidade: "Pau dos Ferros", pontoPadraoId: "p4" },
   { id: "a10", usuarioId: "u10", matricula: "20241094057", curso: "Eletrotécnica – 2º ano", cidade: "São Miguel", pontoPadraoId: "p2" },
+  { id: "a11", usuarioId: "u13", matricula: "20251094021", curso: "Informática – 1º ano", cidade: "Encanto", pontoPadraoId: "p1" },
+  { id: "a12", usuarioId: "u14", matricula: "20241094063", curso: "Edificações – 2º ano", cidade: "Alexandria", pontoPadraoId: "p3" },
+  { id: "a13", usuarioId: "u15", matricula: "20231094034", curso: "Apicultura – 3º ano", cidade: "Pau dos Ferros", pontoPadraoId: "p4" },
+  { id: "a14", usuarioId: "u16", matricula: "20251094038", curso: "Eletrotécnica – 1º ano", cidade: "São Miguel", pontoPadraoId: "p2" },
+  { id: "a15", usuarioId: "u17", matricula: "20241094070", curso: "Informática – 2º ano", cidade: "Pau dos Ferros", pontoPadraoId: "p5" },
 ];
 
 export const RESPONSAVEIS: Responsavel[] = [
@@ -102,9 +121,21 @@ export const TAGS: TagNFC[] = ALUNOS.map((a, i) => ({
   id: `t${i + 1}`,
   alunoId: a.id,
   codigo: ["04:a2:3f:1b:7c:80:00", "04:5d:91:e2:3a:11:90", "04:c8:07:6b:52:2f:81", "04:19:aa:4c:d0:73:80", "04:7e:3b:90:15:c4:81",
-    "04:e0:62:2d:9f:08:80", "04:3c:d4:71:a8:5e:90", "04:91:0f:c2:66:b7:81", "04:28:e5:5a:13:9d:80", "04:b6:7a:08:f4:21:90"][i]!,
+    "04:e0:62:2d:9f:08:80", "04:3c:d4:71:a8:5e:90", "04:91:0f:c2:66:b7:81", "04:28:e5:5a:13:9d:80", "04:b6:7a:08:f4:21:90",
+    "04:11:2c:9e:40:d5:80", "04:62:f1:07:bb:3a:81", "04:a9:5e:c3:28:16:90", "04:d7:84:1f:6c:e2:80", "04:3f:b0:95:71:0c:81"][i]!,
   ativa: true,
-}));
+})).concat([
+  // Tag antiga do João Victor, bloqueada após ser perdida (para testar o aviso de tag bloqueada).
+  { id: "t-bloq", alunoId: "a2", codigo: "04:de:ad:be:ef:00:01", ativa: false },
+]);
+
+/** Códigos para testar a tela de Embarque sem tags físicas. */
+export const TAGS_DE_TESTE = [
+  { rotulo: "Válida (Maria Eduarda)", codigo: "04:c8:07:6b:52:2f:81" },
+  { rotulo: "Sem confirmação (Kauã)", codigo: "04:91:0f:c2:66:b7:81" },
+  { rotulo: "Bloqueada", codigo: "04:de:ad:be:ef:00:01" },
+  { rotulo: "Inexistente", codigo: "04:ff:ff:ff:ff:ff:ff" },
+];
 
 export const ONIBUS: Onibus[] = [
   { id: "o1", placa: "QGX-4E21", modelo: "Volare W9", capacidade: 32, motorista: "Sr. Francisco" },
@@ -183,10 +214,10 @@ export function gerarSementes(viagens: Viagem[]) {
   emb("v1", ["a5"], "manual");
   conf("v2", ["a1", "a2", "a3", "a5", "a7"]);
   emb("v2", ["a1", "a2", "a3", "a5"]);
-  conf("v3", ["a1", "a2", "a3", "a4", "a6", "a7", "a9"]);
-  emb("v3", ["a3", "a6", "a7"]);
+  conf("v3", ["a1", "a2", "a3", "a4", "a5", "a6", "a7", "a9", "a11", "a12", "a13", "a14", "a15"]);
+  emb("v3", ["a6", "a7"]);
   emb("v3", ["a4"], "manual");
-  conf("v4", ["a3", "a7", "a9", "a10"]);
+  conf("v4", ["a1", "a2", "a3", "a4", "a5", "a6", "a7", "a9", "a10", "a11", "a12", "a13", "a14", "a15"]);
   conf("v5", ["a1", "a4", "a6"]);
   conf("v6", ["a1", "a8"]);
 
